@@ -40,7 +40,7 @@ jobs:
 
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Fetch all history and tags
 
@@ -68,20 +68,20 @@ jobs:
           echo "skip=false" >> $GITHUB_OUTPUT
           echo "tag=${{ needs.check_release.outputs.tag }}" >> $GITHUB_OUTPUT
 
-      - name: Skip build if no server tag found
-        if: (steps.find_tag.outputs.skip == 'true' && needs.check_release.outputs.tag == 'latest_server')
-        run: |
-          echo "Skipping build because no tag starting with 'server' was found."
-          exit 1
+      # - name: Skip build if no server tag found
+      #   if: (steps.find_tag.outputs.skip == 'true' && needs.check_release.outputs.tag == 'latest_server')
+      #   run: |
+      #     echo "Skipping build because no tag starting with 'server' was found."
+      #     exit 1
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -106,13 +106,13 @@ jobs:
         run: echo "GO_VERSION=$(grep '^go ' ./app/server/go.mod | awk '{print $2}')" >> $GITHUB_OUTPUT
 
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: ./app/
           file: ./app/server/Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64
-          build-args: GO_VERSION={{ steps.go_version.outputs.GO_VERSION }}
+          build-args: GO_VERSION=${{ steps.go_version.outputs.GO_VERSION }}
           tags: |
-            plandexai/plandex-server:${{ steps.sanitize.outputs.SANITIZED_TAG_NAME }}
-            plandexai/plandex-server:latest
+            sukhorukov/plandex-server:v2.0.2
+            sukhorukov/plandex-server:latest
